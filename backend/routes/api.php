@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\Booking\VehicleController;
+use App\Http\Controllers\Api\Booking\BookingFormController;
+
 
 Route::get('ping', fn () => response()->json([
     'ok' => true,
@@ -23,4 +25,13 @@ Route::prefix('auth')->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('vehicles', [VehicleController::class, 'index']);
     Route::post('vehicles', [VehicleController::class, 'store']);
+});
+
+// Public frontend
+Route::get('booking-forms/{slug}', [BookingFormController::class, 'show']);
+
+// Admin
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('booking-forms', [BookingFormController::class, 'index']);
+    Route::post('booking-forms', [BookingFormController::class, 'store']);
 });

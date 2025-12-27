@@ -11,28 +11,31 @@ Accept: application/json
 ### Login
 POST http://127.0.0.1:8000/api/auth/login
 Content-Type: application/json
+Accept: application/json
 
 {
-  "email": "test1@limoflux.com",
+  "email": "test@example.com",
   "password": "password123"
 }
 
-###
 
 
 
-
-POST http://127.0.0.1:8000/api/vehicles
+### Create Booking Form
+POST http://127.0.0.1:8000/api/booking-forms
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 4|95YoNupl1LGJBHyHwfzEsogNAV4NscyFTUqaJ61Uabf05986
+Authorization: Bearer 1|lg85jRag4jmf23acbppqloSvpnDvWcJcHIhGECUCabc063d4
 
 {
-  "vehicle_type_id": 1,
-  "name": "Mercedes S-Class",
-  "passengers": 3,
-  "luggage": 2,
-  "base_price": 150,
-  "price_per_km": 3.5
+  "name": "Airport Transfers",
+  "slug": "airport-transfers",
+  "currency": "DKK",
+  "services": ["distance", "hourly"],
+  "settings": {
+    "enable_waypoints": true,
+    "min_distance_km": 5,
+    "enable_vehicle_selection": true,
+    "show_summary_sidebar": true
+  }
 }
-
