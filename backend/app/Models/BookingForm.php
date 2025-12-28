@@ -2,6 +2,8 @@
 
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\BookingFormVersion;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class BookingForm extends Model
 {
     protected $fillable = [
@@ -29,5 +31,23 @@ class BookingForm extends Model
     {
         return $this->hasMany(BookingFormAgreement::class);
     }
+
+     public function versions()
+{
+    return $this->hasMany(
+        BookingFormVersion::class,
+        'booking_form_id',
+        'id'
+    );
+}
+
+    public function bookingFormVersion()
+{
+    return $this->belongsTo(
+        BookingFormVersion::class,
+        'booking_form_version_id',
+        'id'
+    );
+}
 }
 

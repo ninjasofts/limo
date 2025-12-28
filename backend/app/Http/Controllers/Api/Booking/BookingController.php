@@ -17,7 +17,8 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $payload = $request->validate([
-            'booking_form_id' => 'required|exists:booking_forms,id',
+            // 'booking_form_id' => 'required|exists:booking_forms,id',
+            'slug' => 'required|string|exists:booking_forms,slug',
             'vehicle_id' => 'required|exists:vehicles,id',
             'service_type' => 'required|in:distance,hourly,flat',
             'transfer_type' => 'nullable|in:one_way,return,return_new_ride',

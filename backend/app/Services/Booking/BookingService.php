@@ -12,10 +12,24 @@ class BookingService
     {
         return DB::transaction(function () use ($payload) {
 
-            $form = BookingForm::with(['fields', 'agreements'])
-                ->where('id', $payload['booking_form_id'])
-                ->where('active', true)
-                ->firstOrFail();
+            // $form = BookingForm::with(['fields', 'agreements'])
+            //     ->where('id', $payload['booking_form_id'])
+            //     ->where('active', true)
+            //     ->firstOrFail();
+
+            $form = BookingForm::whereSlug($payload['slug'])->with(['fields', 'agreements'])->firstOrFail();
+            
+            $latestVersion = $form->versions()->latest('version')->first();
+            if (!$latestVersion) {
+                $latestVersion = $form->versions()->create([
+                    'version' => 1,
+                    'schema' => [
+                        'fields' => $form->fields->toArray(),
+                        'agreements' => $form->agreements->toArray(),
+                    ],
+                ]);
+            }
+
 
             $fieldIds = $form->fields->pluck('id')->map(fn($i)=>(string)$i)->all();
             $agreementIds = $form->agreements->pluck('id')->map(fn($i)=>(string)$i)->all();
@@ -29,6 +43,7 @@ class BookingService
             $booking = Booking::create([
                 'booking_number' => BookingNumber::make(),
                 'booking_form_id' => $form->id,
+                'booking_form_version_id' => $latestVersion->id,
                 'vehicle_id' => $payload['vehicle_id'] ?? null,
                 'service_type' => $payload['service_type'],
                 'transfer_type' => $payload['transfer_type'] ?? 'one_way',

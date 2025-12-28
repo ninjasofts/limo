@@ -19,7 +19,7 @@ X-Client: admin-panel
 }
 
 ### ✅ Copy token from response and paste below
-@token = 2|zLSPRN0jx31wCg2rrR8id2mMteCeprw7SciBXzHv1b5eebc4
+@token = 1|pHo6PUR1pMgeSCJdqbxeT9evdwNU1PQ4CoRJpTiK90e44436
 
 
 ### =========================
@@ -63,6 +63,7 @@ Accept: application/json
 
 {
   "booking_form_id": 1,
+  "slug": "airport-transfers",
   "vehicle_id": 1,
   "service_type": "distance",
   "transfer_type": "one_way",

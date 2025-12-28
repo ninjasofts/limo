@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
         BookingFormSeeder::class,
         BookingFormFieldSeeder::class,
         BookingFormAgreementSeeder::class,
+        BookingFormVersionSeeder::class
     ]);
     }
 }
