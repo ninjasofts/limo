@@ -1,41 +1,110 @@
-### Ping Test
+### =========================
+### Health Check
+### =========================
 GET http://127.0.0.1:8000/api/ping
 Accept: application/json
-#
-###
-GET http://127.0.0.1:8000/api/vehicles
-Accept: application/json
 
 
-
-### Login
+### =========================
+### Login (Admin)
+### =========================
 POST http://127.0.0.1:8000/api/auth/login
 Content-Type: application/json
 Accept: application/json
+X-Client: admin-panel
 
 {
   "email": "test@example.com",
   "password": "password123"
 }
 
+### ✅ Copy token from response and paste below
+@token = 2|zLSPRN0jx31wCg2rrR8id2mMteCeprw7SciBXzHv1b5eebc4
 
 
+### =========================
+### List Vehicles (Public)
+### =========================
+GET http://127.0.0.1:8000/api/vehicles
+Accept: application/json
 
-### Create Booking Form
-POST http://127.0.0.1:8000/api/booking-forms
+
+### =========================
+### Get Booking Form (Public)
+### =========================
+GET http://127.0.0.1:8000/api/booking-forms/airport-transfers
+Accept: application/json
+
+
+### =========================
+### Calculate Booking (Public)
+### =========================
+POST http://127.0.0.1:8000/api/bookings/calculate
 Content-Type: application/json
 Accept: application/json
-Authorization: Bearer 1|lg85jRag4jmf23acbppqloSvpnDvWcJcHIhGECUCabc063d4
 
 {
-  "name": "Airport Transfers",
-  "slug": "airport-transfers",
-  "currency": "DKK",
-  "services": ["distance", "hourly"],
-  "settings": {
-    "enable_waypoints": true,
-    "min_distance_km": 5,
-    "enable_vehicle_selection": true,
-    "show_summary_sidebar": true
+  "booking_form_id": 1,
+  "vehicle_id": 1,
+  "service_type": "distance",
+  "pickup_at": "2025-12-28 10:30:00",
+  "distance_km": 12.5,
+  "duration_min": 28,
+  "extra_time_min": 10
+}
+
+
+### =========================
+### Create Booking (Public)
+### =========================
+POST http://127.0.0.1:8000/api/bookings
+Content-Type: application/json
+Accept: application/json
+
+{
+  "booking_form_id": 1,
+  "vehicle_id": 1,
+  "service_type": "distance",
+  "transfer_type": "one_way",
+  "pickup_at": "2025-12-28 10:30:00",
+
+  "pickup": { "address": "Copenhagen Airport", "lat": 55.618, "lng": 12.656 },
+  "dropoff": { "address": "Tivoli Gardens", "lat": 55.673, "lng": 12.568 },
+
+  "waypoints": [
+    { "address": "Nyhavn", "lat": 55.679, "lng": 12.591 }
+  ],
+
+  "distance_km": 12.5,
+  "duration_min": 28,
+  "extra_time_min": 10,
+
+  "adults": 2,
+  "children": 0,
+  "luggage": 2,
+
+  "customer": {
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "john@example.com",
+    "phone": "+45xxxxxxx",
+    "note": "Need child seat"
+  },
+
+  "fields": {
+    "1": "Flight SK123",
+    "2": "Meet & Greet"
+  },
+
+  "agreements": {
+    "1": true
   }
 }
+
+
+### =========================
+### Get Booking by ID (Admin protected)
+### =========================
+GET http://127.0.0.1:8000/api/bookings/1
+Accept: application/json
+Authorization: Bearer {{token}}

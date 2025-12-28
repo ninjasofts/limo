@@ -18,6 +18,7 @@ class BookingForm extends Model
         'settings' => 'array',
     ];
 
+    
     public function fields()
     {
         return $this->hasMany(BookingFormField::class)

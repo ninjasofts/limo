@@ -1,3 +1,8 @@
+<?php
+namespace App\Models;
+use Illuminate\Database\Eloquent\Model;
+
+
 class Vehicle extends Model
 {
     protected $fillable = [
@@ -25,8 +30,12 @@ class Vehicle extends Model
     }
 
     public function attributes()
-    {
-        return $this->belongsToMany(VehicleAttribute::class)
-            ->withPivot('value');
-    }
+{
+    return $this->belongsToMany(
+        VehicleAttribute::class,
+        'vehicle_attribute_vehicle',   // 👈 explicit pivot table
+        'vehicle_id',
+        'vehicle_attribute_id'
+    )->withPivot('value');
+}
 }
