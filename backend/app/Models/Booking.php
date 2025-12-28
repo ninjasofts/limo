@@ -2,6 +2,7 @@
 
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\BookingFormVersion;
 class Booking extends Model
 {
     protected $fillable = [
@@ -57,6 +58,15 @@ class Booking extends Model
     public function pricingSnapshot()
 {
     return $this->hasOne(BookingPricingSnapshot::class);
+}
+
+public function bookingFormVersion()
+{
+    return $this->belongsTo(
+        BookingFormVersion::class,
+        'booking_form_version_id',
+        'id'
+    );
 }
 
 }
