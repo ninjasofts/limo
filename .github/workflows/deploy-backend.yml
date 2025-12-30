@@ -1,69 +1,51 @@
-name: Deploy LimoFlux Backend to cPanel
+name: Deploy to cPanel via SSH (no rsync)
 
 on:
   push:
-    branches: [ "main" ]
-    paths:
-      - "backend/**"
+    branches: ["main"]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Deploy over SSH (git pull + copy backend)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.CPANEL_HOST }}
+          username: ${{ secrets.CPANEL_USER }}
+          key: ${{ secrets.CPANEL_SSH_KEY }}
+          port: ${{ secrets.CPANEL_SSH_PORT }}
+          script: |
+            set -e
 
-      - name: Install SSH + rsync
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openssh-client rsync
+            # Paths
+            REPO_DIR="/home/${{ secrets.CPANEL_USER }}/_deploy_tmp/limo"
+            TARGET_DIR="${{ secrets.CPANEL_APP_PATH }}"
 
-      - name: Setup SSH key
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+            # Ensure folders
+            mkdir -p "/home/${{ secrets.CPANEL_USER }}/_deploy_tmp"
+            mkdir -p "$TARGET_DIR"
 
-      - name: Add host to known_hosts
-        run: |
-          ssh-keyscan -p ${{ secrets.CPANEL_SSH_PORT }} -H ${{ secrets.CPANEL_HOST }} >> ~/.ssh/known_hosts
+            # Clone once, then pull
+            if [ ! -d "$REPO_DIR/.git" ]; then
+              git clone https://github.com/ninjasofts/limo.git "$REPO_DIR"
+            fi
 
-      - name: SSH connectivity test
-        run: |
-          ssh -p ${{ secrets.CPANEL_SSH_PORT }} \
-              -i ~/.ssh/id_ed25519 \
-              -o PreferredAuthentications=publickey \
-              -o IdentitiesOnly=yes \
-              ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} \
-              "whoami && pwd && echo 'SSH_OK'"
+            cd "$REPO_DIR"
+            git fetch --all
+            git reset --hard origin/main
 
-      - name: Ensure deploy path exists
-        run: |
-          ssh -p ${{ secrets.CPANEL_SSH_PORT }} \
-              -i ~/.ssh/id_ed25519 \
-              -o PreferredAuthentications=publickey \
-              -o IdentitiesOnly=yes \
-              ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} \
-              "mkdir -p ${{ secrets.CPANEL_DEPLOY_PATH }}"
+            # Copy backend folder into target (Laravel lives in repo/backend)
+            rm -rf "$TARGET_DIR"/*
+            cp -R "$REPO_DIR/backend/." "$TARGET_DIR/"
 
-      - name: Deploy backend via rsync
-        run: |
-          rsync -avzr --delete \
-            --exclude=".env" \
-            --exclude="storage/" \
-            --exclude="bootstrap/cache/" \
-            --exclude="vendor/" \
-            --exclude="node_modules/" \
-            -e "ssh -p ${{ secrets.CPANEL_SSH_PORT }} -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes" \
-            backend/ ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ secrets.CPANEL_DEPLOY_PATH }}/
+            # Laravel post-deploy (safe defaults)
+            cd "$TARGET_DIR"
 
-      - name: Post-deploy permissions
-        run: |
-          ssh -p ${{ secrets.CPANEL_SSH_PORT }} \
-              -i ~/.ssh/id_ed25519 \
-              -o PreferredAuthentications=publickey \
-              -o IdentitiesOnly=yes \
-              ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} \
-              "cd ${{ secrets.CPANEL_DEPLOY_PATH }} && chmod -R 775 storage bootstrap/cache || true"
+            if [ -f artisan ]; then
+              php artisan migrate --force || true
+              php artisan optimize:clear || true
+            fi
+
+            chmod -R 775 storage bootstrap/cache || true
