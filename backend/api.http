@@ -110,4 +110,4 @@ GET http://127.0.0.1:8000/api/bookings/1
 Accept: application/json
 Authorization: Bearer {{token}}
 
-# testign
+# testing note
