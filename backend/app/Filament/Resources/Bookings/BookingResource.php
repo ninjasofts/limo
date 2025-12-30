@@ -13,6 +13,7 @@ use App\Models\Booking;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use App\Filament\Resources\Bookings\Schemas\BookingViewSchema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 
@@ -52,5 +53,10 @@ class BookingResource extends Resource
             'view' => ViewBooking::route('/{record}'),
             // 'edit' => EditBooking::route('/{record}/edit'),
         ];
+    }
+
+    public static function getViewSchema(): Schema
+    {
+        return BookingViewSchema::make();
     }
 }

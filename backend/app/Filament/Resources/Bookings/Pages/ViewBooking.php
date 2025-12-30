@@ -3,8 +3,11 @@
 namespace App\Filament\Resources\Bookings\Pages;
 
 use App\Filament\Resources\Bookings\BookingResource;
-use Filament\Actions\EditAction;
+use App\Filament\Resources\Bookings\Schemas\BookingViewSchema;
+use App\Models\Booking;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Model;
 
 class ViewBooking extends ViewRecord
 {
@@ -12,8 +15,22 @@ class ViewBooking extends ViewRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            EditAction::make(),
-        ];
+        return []; // 🔒 read-only
     }
+
+    protected function resolveRecord(int|string $key): Model
+    {
+        return Booking::query()
+            ->with([
+                'form',
+                'formVersion',  // Updated relation name
+                'vehicle.type',
+                'vehicle.company',
+                'pricingSnapshot',
+                'fieldValues',
+                'agreements.agreement',
+            ])
+            ->findOrFail($key);
+    }
+
 }

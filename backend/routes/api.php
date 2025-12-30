@@ -50,3 +50,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('debug/vehicles', fn () => \App\Models\Vehicle::all());
     }
 });
+
+// Middleware-protected routes for public API clients
+Route::middleware(['public.signature'])->group(function () {
+
+    Route::middleware('throttle:public-read')->group(function () {
+        Route::get('/vehicles', [\App\Http\Controllers\Api\VehicleController::class, 'index']);
+        Route::get('/booking-forms', [\App\Http\Controllers\Api\Booking\BookingFormController::class, 'index']);
+        Route::get('/booking-forms/{slug}', [\App\Http\Controllers\Api\Booking\BookingFormController::class, 'show']);
+    });
+
+    Route::middleware('throttle:public-calc')->group(function () {
+        Route::post('/bookings/calculate', [\App\Http\Controllers\Api\PricingController::class, 'calculate']);
+    });
+
+    Route::middleware('throttle:public-book')->group(function () {
+        Route::post('/bookings', [\App\Http\Controllers\Api\Booking\BookingController::class, 'store']);
+    });
+
+});

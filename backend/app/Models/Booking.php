@@ -8,6 +8,7 @@ class Booking extends Model
     protected $fillable = [
         'booking_number',
         'booking_form_id',
+        'booking_form_version_id',
         'vehicle_id',
         'b2b_account_id',
         'service_type',
@@ -60,7 +61,7 @@ class Booking extends Model
     return $this->hasOne(BookingPricingSnapshot::class);
 }
 
-public function bookingFormVersion()
+public function formVersion()
 {
     return $this->belongsTo(
         BookingFormVersion::class,
@@ -69,6 +70,117 @@ public function bookingFormVersion()
     );
 }
 
+
+
+    // =========================
+    // Presentation helpers (READ-ONLY)
+    // =========================
+
+    public function formVersionSchema(): array
+    {
+        $schema = $this->formVersion?->schema;
+
+        // schema is casted as array in BookingFormVersion, but keep it defensive:
+        if (is_string($schema)) {
+            $decoded = json_decode($schema, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return is_array($schema) ? $schema : [];
+    }
+
+    public function presentedRouteWaypoints(): array
+    {
+        $wps = $this->waypoints ?? [];
+        if (!is_array($wps)) return [];
+
+        return collect($wps)->map(function ($wp, $i) {
+            $address = is_array($wp) ? ($wp['address'] ?? null) : null;
+            return [
+                'stop' => 'Stop ' . ((int)$i + 1),
+                'address' => $address ?: json_encode($wp),
+            ];
+        })->values()->all();
+    }
+
+    public function presentedCustomerFields(): array
+    {
+        $schema = $this->formVersionSchema();
+        $map = collect($schema['fields'] ?? [])
+            ->filter(fn($f) => is_array($f) && isset($f['id']))
+            ->keyBy(fn($f) => (int) $f['id']);
+
+        return $this->fieldValues
+            ->map(function (BookingFieldValue $fv) use ($map) {
+                $id = (int) $fv->booking_form_field_id;
+                $label = $map->get($id)['label'] ?? ('Field #' . $id);
+
+                return [
+                    'field' => $label,
+                    'value' => $this->normalizeSnapshotValue($fv->value),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    public function presentedAgreements(): array
+    {
+        $schema = $this->formVersionSchema();
+        $map = collect($schema['agreements'] ?? [])
+            ->filter(fn($a) => is_array($a) && isset($a['id']))
+            ->keyBy(fn($a) => (int) $a['id']);
+
+        return $this->agreements
+            ->map(function (BookingAgreementAcceptance $acc) use ($map) {
+                $id = (int) $acc->booking_form_agreement_id;
+
+                // Prefer versioned label; fallback to current agreement relation
+                $label = $map->get($id)['label']
+                    ?? $acc->agreement?->label
+                    ?? ('Agreement #' . $id);
+
+                return [
+                    'agreement' => $label,
+                    'accepted'  => (bool) $acc->accepted,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    public function presentedPricingBreakdown(): string
+    {
+        $breakdown = $this->pricingSnapshot?->breakdown ?? null;
+
+        if (empty($breakdown)) return '—';
+
+        return json_encode($breakdown, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    private function normalizeSnapshotValue(mixed $value): string
+    {
+        if ($value === null) return '—';
+
+        if (is_array($value)) {
+            return implode(', ', array_map('strval', $value));
+        }
+
+        if (!is_string($value)) return (string) $value;
+
+        $trim = trim($value);
+
+        // Try JSON decode if it looks like JSON
+        if ($trim !== '' && (str_starts_with($trim, '{') || str_starts_with($trim, '['))) {
+            $decoded = json_decode($trim, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                if (is_array($decoded)) {
+                    return implode(', ', array_map('strval', $decoded));
+                }
+                return (string) $decoded;
+            }
+        }
+
+        return $trim === '' ? '—' : $trim;
+    }
 }
-
-
