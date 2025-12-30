@@ -14,20 +14,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/github_deploy
-          chmod 600 ~/.ssh/github_deploy
-          ssh-keyscan -p "${{ secrets.CPANEL_PORT }}" "${{ secrets.CPANEL_HOST }}" >> ~/.ssh/known_hosts
+          echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -p ${{ secrets.CPANEL_PORT }} ${{ secrets.CPANEL_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Start SSH agent and add key
+      - name: Deploy backend via SCP
         run: |
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/github_deploy
-
-      - name: Upload backend via SCP
-        run: |
-          scp -P "${{ secrets.CPANEL_PORT }}" -r backend/* \
-          "${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USER }}/backend"
+          scp -P ${{ secrets.CPANEL_PORT }} -r backend/* \
+            ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ secrets.CPANEL_DEPLOY_PATH }}
