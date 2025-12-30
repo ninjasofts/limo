@@ -1,4 +1,4 @@
-name: Deploy Laravel Backend to cPanel
+name: Deploy LimoFlux Backend to cPanel
 
 on:
   push:
@@ -14,14 +14,56 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup SSH
+      - name: Install SSH + rsync
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openssh-client rsync
+
+      - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
           echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p ${{ secrets.CPANEL_PORT }} ${{ secrets.CPANEL_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy backend via SCP
+      - name: Add host to known_hosts
         run: |
-          scp -P ${{ secrets.CPANEL_PORT }} -r backend/* \
-            ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ secrets.CPANEL_DEPLOY_PATH }}
+          ssh-keyscan -p ${{ secrets.CPANEL_SSH_PORT }} -H ${{ secrets.CPANEL_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SSH connectivity test
+        run: |
+          ssh -p ${{ secrets.CPANEL_SSH_PORT }} \
+              -i ~/.ssh/id_ed25519 \
+              -o PreferredAuthentications=publickey \
+              -o IdentitiesOnly=yes \
+              ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} \
+              "whoami && pwd && echo 'SSH_OK'"
+
+      - name: Ensure deploy path exists
+        run: |
+          ssh -p ${{ secrets.CPANEL_SSH_PORT }} \
+              -i ~/.ssh/id_ed25519 \
+              -o PreferredAuthentications=publickey \
+              -o IdentitiesOnly=yes \
+              ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} \
+              "mkdir -p ${{ secrets.CPANEL_DEPLOY_PATH }}"
+
+      - name: Deploy backend via rsync
+        run: |
+          rsync -avzr --delete \
+            --exclude=".env" \
+            --exclude="storage/" \
+            --exclude="bootstrap/cache/" \
+            --exclude="vendor/" \
+            --exclude="node_modules/" \
+            -e "ssh -p ${{ secrets.CPANEL_SSH_PORT }} -i ~/.ssh/id_ed25519 -o IdentitiesOnly=yes" \
+            backend/ ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:${{ secrets.CPANEL_DEPLOY_PATH }}/
+
+      - name: Post-deploy permissions
+        run: |
+          ssh -p ${{ secrets.CPANEL_SSH_PORT }} \
+              -i ~/.ssh/id_ed25519 \
+              -o PreferredAuthentications=publickey \
+              -o IdentitiesOnly=yes \
+              ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} \
+              "cd ${{ secrets.CPANEL_DEPLOY_PATH }} && chmod -R 775 storage bootstrap/cache || true"
