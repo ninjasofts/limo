@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\Pricing;
 
 class PricingResult
@@ -12,6 +13,7 @@ class PricingResult
         public float $tax,
         public float $discount,
         public float $total,
-        public array $breakdown
+        public array $breakdown = [],
+        public array $vehicles = []
     ) {}
 }
