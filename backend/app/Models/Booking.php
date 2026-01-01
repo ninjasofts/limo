@@ -75,6 +75,17 @@ public function formVersion()
 }
 
 
+public function canBeConfirmed(): bool
+{
+    return in_array($this->status, ['pending', 'on_hold'], true);
+}
+
+public function canBeCancelled(): bool
+{
+    return !in_array($this->status, ['cancelled', 'completed', 'refunded', 'failed'], true);
+}
+
+
 
     // =========================
     // Presentation helpers (READ-ONLY)
