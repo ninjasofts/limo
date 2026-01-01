@@ -7,71 +7,80 @@ use App\Models\Vehicle;
 
 class PricingService
 {
-    public function calculateForVehicles(Booking $booking): PricingResult
+    public function calculate(Booking $booking): PricingResult
     {
-        $vehicles = Vehicle::query()
-            ->where('active', true)
-            ->get();
+        /**
+         * STEP 1: No vehicle selected yet
+         * → return available vehicles instead of failing
+         */
+        if (!$booking->vehicle_id) {
+            $vehicles = Vehicle::query()
+                ->where('active', true)
+                ->get()
+                ->map(fn ($v) => [
+                    'id' => $v->id,
+                    'name' => $v->name,
+                    'passengers' => $v->passengers,
+                    'luggage' => $v->luggage,
+                    'base_price' => (float) $v->base_price,
+                    'price_per_km' => (float) $v->price_per_km,
+                    'price_per_hour' => (float) $v->price_per_hour,
+                ])
+                ->values()
+                ->toArray();
 
-        if ($vehicles->isEmpty()) {
-            return new PricingResult(
-                basePrice: 0,
-                distancePrice: 0,
-                hourlyPrice: 0,
-                extrasTotal: 0,
-                subtotal: 0,
-                tax: 0,
-                discount: 0,
-                total: 0,
-                breakdown: [],
-                vehicles: []
+            return PricingResult::empty(
+                vehicles: $vehicles,
+                currency: $booking->currency ?? 'EUR'
             );
         }
 
-        $vehicleResults = [];
+        /**
+         * STEP 2: Vehicle selected → calculate price
+         */
+        $vehicle = Vehicle::where('active', true)
+            ->where('id', $booking->vehicle_id)
+            ->first();
 
-        foreach ($vehicles as $vehicle) {
-            $base = (float) $vehicle->base_price;
-            $distancePrice = 0;
-            $hourlyPrice = 0;
-
-            if ($booking->service_type === 'distance') {
-                $distancePrice = (float) $booking->distance_km * (float) $vehicle->price_per_km;
-            }
-
-            if ($booking->service_type === 'hourly') {
-                $hours = ceil(
-                    ((int) $booking->duration_min + (int) $booking->extra_time_min) / 60
-                );
-                $hourlyPrice = $hours * (float) $vehicle->price_per_hour;
-            }
-
-            $subtotal = $base + $distancePrice + $hourlyPrice;
-            $tax = round($subtotal * 0.10, 2);
-            $total = $subtotal + $tax;
-
-            $vehicleResults[] = [
-                'id' => $vehicle->id,
-                'name' => $vehicle->name,
-                'subtotal' => round($subtotal, 2),
-                'tax' => $tax,
-                'total' => round($total, 2),
-                'capacity' => $vehicle->passenger_capacity,
-                'luggage' => $vehicle->luggage_capacity,
-            ];
+        if (!$vehicle) {
+            return PricingResult::empty(
+                vehicles: [],
+                currency: $booking->currency ?? 'EUR'
+            );
         }
 
+        $base = (float) $vehicle->base_price;
+        $distancePrice = 0;
+        $hourlyPrice = 0;
+
+        if ($booking->service_type === 'distance') {
+            $distancePrice = $booking->distance_km * $vehicle->price_per_km;
+        }
+
+        if ($booking->service_type === 'hourly') {
+            $hours = ceil(($booking->duration_min + $booking->extra_time_min) / 60);
+            $hourlyPrice = $hours * $vehicle->price_per_hour;
+        }
+
+        $subtotal = $base + $distancePrice + $hourlyPrice;
+        $tax = round($subtotal * 0.10, 2);
+        $total = $subtotal + $tax;
+
         return new PricingResult(
-            basePrice: 0,
-            distancePrice: 0,
-            hourlyPrice: 0,
+            basePrice: $base,
+            distancePrice: $distancePrice,
+            hourlyPrice: $hourlyPrice,
             extrasTotal: 0,
-            subtotal: 0,
-            tax: 0,
+            subtotal: $subtotal,
+            tax: $tax,
             discount: 0,
-            total: 0,
-            breakdown: [],
-            vehicles: $vehicleResults
+            total: $total,
+            breakdown: [
+                'base' => $base,
+                'distance' => $distancePrice,
+                'hourly' => $hourlyPrice,
+                'tax' => $tax,
+            ]
         );
     }
 }

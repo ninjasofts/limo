@@ -4,24 +4,77 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Vehicle;
 use App\Services\Pricing\PricingService;
 use Illuminate\Http\Request;
 
 class PricingController extends Controller
 {
-    public function calculate(Request $request, PricingService $pricing)
-    {
-        $booking = new Booking();
-        $booking->service_type = $request->string('service_type');
-        $booking->distance_km = (float) $request->input('distance_km', 0);
-        $booking->duration_min = (int) $request->input('duration_min', 0);
-        $booking->extra_time_min = (int) $request->input('extra_time_min', 0);
+    protected PricingService $pricingService;
 
-        $result = $pricing->calculateForVehicles($booking);
+    public function __construct(PricingService $pricingService)
+    {
+        $this->pricingService = $pricingService;
+    }
+
+    public function calculate(Request $request)
+    {
+        // Minimal validation for MVP
+        $request->validate([
+            'booking_form_slug' => 'required|string',
+            'service_type'      => 'required|string',
+            'distance_km'       => 'nullable|numeric',
+            'duration_min'      => 'nullable|integer',
+            'extra_time_min'    => 'nullable|integer',
+            'vehicle_id'        => 'nullable|integer',
+        ]);
+
+        // If no vehicle selected yet → return available vehicles
+        if (!$request->filled('vehicle_id')) {
+            $vehicles = Vehicle::query()
+                ->where('active', true)
+                ->get()
+                ->map(function (Vehicle $v) {
+                    return [
+                        'id'         => $v->id,
+                        'name'       => $v->name,
+                        'passengers' => $v->passengers,
+                        'luggage'    => $v->luggage,
+                        'currency'   => 'EUR',
+                        'total'      => $v->base_price,
+                    ];
+                });
+
+            return response()->json([
+                'vehicles' => $vehicles,
+                'note' => 'No vehicle selected yet',
+            ]);
+        }
+
+        // Build a temporary booking object (NOT saved)
+        $booking = new Booking([
+            'vehicle_id'      => $request->vehicle_id,
+            'service_type'    => $request->service_type,
+            'distance_km'     => $request->distance_km ?? 0,
+            'duration_min'    => $request->duration_min ?? 0,
+            'extra_time_min'  => $request->extra_time_min ?? 0,
+        ]);
+
+        $result = $this->pricingService->calculate($booking);
 
         return response()->json([
             'currency' => 'EUR',
-            'vehicles' => $result->vehicles,
+            'subtotal' => $result->subtotal,
+            'tax'      => $result->tax,
+            'discount' => $result->discount,
+            'total'    => $result->total,
+            'vehicles' => [
+                [
+                    'id'    => $booking->vehicle_id,
+                    'name'  => $booking->vehicle?->name,
+                    'total' => $result->total,
+                ]
+            ],
         ]);
     }
 }
