@@ -10,6 +10,10 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingConfirmed;
+use App\Mail\BookingCancelled;
+
 
 class ViewBooking extends ViewRecord
 {
@@ -42,6 +46,16 @@ class ViewBooking extends ViewRecord
                     'status' => 'processing',
                 ]);
 
+                // ✅ Customer email
+                if ($this->record->customer_email) {
+                    Mail::to($this->record->customer_email)
+                        ->send(new BookingConfirmed($this->record));
+                }
+
+                // ✅ Admin email
+                Mail::to(config('mail.admin_address'))
+                    ->send(new BookingConfirmed($this->record));
+
                 Notification::make()
                     ->title('Booking confirmed')
                     ->success()
@@ -57,6 +71,16 @@ class ViewBooking extends ViewRecord
                 $this->record->update([
                     'status' => 'cancelled',
                 ]);
+
+                // ✅ Customer email
+                if ($this->record->customer_email) {
+                    Mail::to($this->record->customer_email)
+                        ->send(new BookingCancelled($this->record));
+                }
+
+                // ✅ Admin email
+                Mail::to(config('mail.admin_address'))
+                    ->send(new BookingCancelled($this->record));
 
                 Notification::make()
                     ->title('Booking cancelled')

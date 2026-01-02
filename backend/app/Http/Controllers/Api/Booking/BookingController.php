@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Services\Booking\BookingService;
 use App\Services\Pricing\PricingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BookingCreated;
 
 class BookingController extends Controller
 {
@@ -54,6 +56,12 @@ class BookingController extends Controller
         ]);
 
         $booking = $this->service->create($payload);
+
+        Mail::to($booking->customer_email)
+            ->send(new BookingCreated($booking));
+
+        Mail::to(config('mail.admin_address'))
+            ->send(new BookingCreated($booking));
 
         // Pricing snapshot + update booking totals
         $result = $this->pricing->calculate($booking);
