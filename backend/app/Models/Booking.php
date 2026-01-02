@@ -23,6 +23,9 @@ class Booking extends Model
         'currency','subtotal','tax','discount','total',
         'status','payment_status',
         'customer_first_name','customer_last_name','customer_email','customer_phone','customer_note',
+        'payment_method',
+        'payment_intent_id',
+        'payment_status',
     ];
 
     protected $casts = [
@@ -198,4 +201,21 @@ public function canBeCancelled(): bool
 
         return $trim === '' ? '—' : $trim;
     }
+
+
+    public function markPaymentPending(): void
+    {
+        $this->update(['payment_status' => 'pending']);
+    }
+
+    public function markPaymentPaid(): void
+    {
+        $this->update(['payment_status' => 'paid']);
+    }
+
+    public function markPaymentFailed(): void
+    {
+        $this->update(['payment_status' => 'failed']);
+    }
+
 }

@@ -3,29 +3,23 @@
 namespace App\Mail;
 
 use App\Models\Booking;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class BookingConfirmed extends Mailable
+class BookingConfirmed extends Mailable implements ShouldQueue
 {
-    use SerializesModels;
+    use Queueable, SerializesModels;
 
-    public function __construct(public Booking $booking) {}
+    public function __construct(
+        public Booking $booking
+    ) {}
 
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Booking Confirmed – ' . $this->booking->booking_number,
-        );
-    }
-
-    public function content(): Content
-    {
-        return new Content(
-            view: 'emails.booking.confirmed',
-            with: ['booking' => $this->booking],
-        );
+        return $this
+            ->subject('Booking Confirmed – ' . $this->booking->booking_number)
+            ->view('emails.booking.confirmed');
     }
 }

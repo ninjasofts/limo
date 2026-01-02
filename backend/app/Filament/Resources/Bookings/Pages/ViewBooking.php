@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\BookingConfirmed;
 use App\Mail\BookingCancelled;
+use App\Services\Invoice\InvoiceService;
 
 
 class ViewBooking extends ViewRecord
@@ -44,17 +45,20 @@ class ViewBooking extends ViewRecord
             ->action(function () {
                 $this->record->update([
                     'status' => 'processing',
+                    'payment_status' => 'pending',
                 ]);
-
+            $InvoicePath = app(InvoiceService::class)->generate($this->record);
                 // ✅ Customer email
                 if ($this->record->customer_email) {
                     Mail::to($this->record->customer_email)
-                        ->send(new BookingConfirmed($this->record));
+                        ->queue((new BookingConfirmed($this->record))
+                            ->attach($InvoicePath));
                 }
 
                 // ✅ Admin email
                 Mail::to(config('mail.admin_address'))
-                    ->send(new BookingConfirmed($this->record));
+                    ->queue((new BookingConfirmed($this->record))
+                         ->attach($InvoicePath));
 
                 Notification::make()
                     ->title('Booking confirmed')
@@ -75,12 +79,12 @@ class ViewBooking extends ViewRecord
                 // ✅ Customer email
                 if ($this->record->customer_email) {
                     Mail::to($this->record->customer_email)
-                        ->send(new BookingCancelled($this->record));
+                        ->queue(new BookingCancelled($this->record));
                 }
 
                 // ✅ Admin email
                 Mail::to(config('mail.admin_address'))
-                    ->send(new BookingCancelled($this->record));
+                    ->queue(new BookingCancelled($this->record));
 
                 Notification::make()
                     ->title('Booking cancelled')

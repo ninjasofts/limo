@@ -57,11 +57,9 @@ class BookingController extends Controller
 
         $booking = $this->service->create($payload);
 
-        Mail::to($booking->customer_email)
-            ->send(new BookingCreated($booking));
-
-        Mail::to(config('mail.admin_address'))
-            ->send(new BookingCreated($booking));
+        Mail::to($booking->customer_email)->queue(new BookingCreated($booking));
+        Mail::to(config('mail.admin_address'))->queue(new BookingCreated($booking));
+            
 
         // Pricing snapshot + update booking totals
         $result = $this->pricing->calculate($booking);
@@ -78,6 +76,11 @@ class BookingController extends Controller
                 'discount' => $result->discount,
                 'total' => $result->total,
                 'breakdown' => $result->breakdown,
+                'payment_method' => $payload['payment_method'],
+                    'payment_status' => $payload['payment_method'] === 'card'
+                        ? 'pending'
+                        : 'unpaid',
+
             ]);
         }
 
@@ -86,6 +89,12 @@ class BookingController extends Controller
             'tax' => $result->tax,
             'discount' => $result->discount,
             'total' => $result->total,
+            'payment_method' => 'required|in:card,offline,pay_later',
+            'payment_method' => $payload['payment_method'] ?? 'offline',
+            'payment_intent_id' => 'pi_' . uniqid(),
+            'payment_status' => in_array($payload['payment_method'], ['offline', 'pay_later'])
+                ? 'pending'
+                : 'unpaid',
         ]);
 
         return response()->json(['ok' => true, 'data' => $booking], 201);
