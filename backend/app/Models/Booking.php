@@ -205,7 +205,7 @@ public function canBeCancelled(): bool
 
     public function markPaymentPending(): void
     {
-        $this->update(['payment_status' => 'pending']);
+        $this->update(['payment_status' => 'unpaid']);
     }
 
     public function markPaymentPaid(): void

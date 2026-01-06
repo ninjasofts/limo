@@ -53,6 +53,7 @@ class BookingController extends Controller
 
             'fields' => 'nullable|array',
             'agreements' => 'nullable|array',
+            'payment_method' => 'nullable|in:card,offline,pay_later',
         ]);
 
         $booking = $this->service->create($payload);
@@ -76,25 +77,22 @@ class BookingController extends Controller
                 'discount' => $result->discount,
                 'total' => $result->total,
                 'breakdown' => $result->breakdown,
-                'payment_method' => $payload['payment_method'],
-                    'payment_status' => $payload['payment_method'] === 'card'
-                        ? 'pending'
-                        : 'unpaid',
 
             ]);
         }
+         $paymentMethod = $payload['payment_method'] ?? 'offline';
 
         $booking->update([
             'subtotal' => $result->subtotal,
             'tax' => $result->tax,
             'discount' => $result->discount,
             'total' => $result->total,
-            'payment_method' => 'required|in:card,offline,pay_later',
-            'payment_method' => $payload['payment_method'] ?? 'offline',
-            'payment_intent_id' => 'pi_' . uniqid(),
-            'payment_status' => in_array($payload['payment_method'], ['offline', 'pay_later'])
-                ? 'pending'
-                : 'unpaid',
+
+            'payment_method' => $paymentMethod,
+            'payment_intent_id' => $paymentMethod === 'card' ? ('pi_' . uniqid()) : null,
+
+            // IMPORTANT: must match ENUM values
+            'payment_status' => 'unpaid',
         ]);
 
         return response()->json(['ok' => true, 'data' => $booking], 201);

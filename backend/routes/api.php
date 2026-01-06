@@ -26,13 +26,14 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-/**
- * PUBLIC FRONTEND (Website booking form consumes these)
- */
-Route::get('vehicles', [VehicleController::class, 'index']);
-Route::get('booking-forms/{slug}', [BookingFormController::class, 'show']);
-Route::post('bookings/calculate', [PricingController::class, 'calculate']);
-Route::post('bookings', [BookingController::class, 'store']);
+// /**
+//  * PUBLIC FRONTEND (Website booking form consumes these)
+//  */
+// Route::get('vehicles', [VehicleController::class, 'index']);
+// Route::get('booking-forms/{slug}', [BookingFormController::class, 'show']);
+// Route::post('bookings/calculate', [PricingController::class, 'calculate']);
+// Route::post('bookings', [BookingController::class, 'store']);
+
 
 /**
  * ADMIN / DASHBOARD (Protected)
