@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Booking extends Model
 {
@@ -184,6 +185,14 @@ class Booking extends Model
             })
             ->values()
             ->all();
+    }
+
+    public function agreements(): HasMany
+    {
+        return $this->hasMany(
+            \App\Models\BookingAgreement::class,
+            'booking_id'
+        );
     }
 
     public function presentedPricingBreakdown(): string
