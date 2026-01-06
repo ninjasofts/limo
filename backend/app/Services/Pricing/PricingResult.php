@@ -5,6 +5,7 @@ namespace App\Services\Pricing;
 class PricingResult
 {
     public function __construct(
+        public string $currency,
         public float $basePrice,
         public float $distancePrice,
         public float $hourlyPrice,
@@ -13,7 +14,6 @@ class PricingResult
         public float $tax,
         public float $discount,
         public float $total,
-        public array $breakdown = [],
-        public array $vehicles = []
+        public array $breakdown = []
     ) {}
 }

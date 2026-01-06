@@ -7,7 +7,15 @@ class BookingFormAgreement extends Model
     protected $fillable = [
         'booking_form_id',
         'label',
-        'content',
         'required',
     ];
+
+    protected $casts = [
+        'required' => 'boolean',
+    ];
+
+    public function bookingForm()
+    {
+        return $this->belongsTo(BookingForm::class);
+    }
 }

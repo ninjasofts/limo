@@ -9,12 +9,20 @@ class BookingFormField extends Model
         'label',
         'name',
         'type',
-        'options',
         'required',
         'sort_order',
+        'meta',
     ];
 
     protected $casts = [
-        'options' => 'array',
+        'required' => 'boolean',
+        'meta' => 'array',
+        'sort_order' => 'integer',
+
     ];
+
+    public function bookingForm()
+    {
+        return $this->belongsTo(BookingForm::class);
+    }
 }
