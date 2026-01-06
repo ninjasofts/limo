@@ -21,11 +21,12 @@ class Booking extends Model
         'distance_km','duration_min','extra_time_min',
         'adults','children','luggage',
         'currency','subtotal','tax','discount','total',
-        'status','payment_status',
+        'status',
         'customer_first_name','customer_last_name','customer_email','customer_phone','customer_note',
         'payment_method',
         'payment_intent_id',
         'payment_status',
+        'client_request_id',
     ];
 
     protected $casts = [
