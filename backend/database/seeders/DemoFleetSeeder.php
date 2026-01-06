@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use App\Models\VehicleType;
 use App\Models\Vehicle;
+use App\Models\Provider;
+use App\Models\VehicleInventory;
 
 class DemoFleetSeeder extends Seeder
 {
@@ -30,5 +32,20 @@ class DemoFleetSeeder extends Seeder
                 'active' => true,
             ]
         );
+
+        Provider::create([
+                'name' => 'LimoFlux Internal Fleet',
+                'type' => 'internal',
+                'active' => true
+                ]);
+
+        VehicleInventory::create([
+                'vehicle_id' => 1, // S-Class
+                'provider_id' => 1, // internal
+                'quantity' => 5,
+                'buffer' => 1,
+                'active' => true
+                ]);
+            
     }
 }

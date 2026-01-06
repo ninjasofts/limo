@@ -5,13 +5,14 @@ namespace App\Services\Pricing;
 use App\Models\Booking;
 use App\Models\BookingForm;
 use App\Models\Vehicle;
+use App\Models\VehicleInventory;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
 
 class PricingService
 {
     /**
-     * Calculate pricing for a booking (authoritative)
+     * Calculate pricing for a single booking (authoritative)
      */
     public function calculate(Booking $booking): PricingResult
     {
@@ -50,8 +51,8 @@ class PricingService
                 }
 
                 $hours = ceil($booking->duration_min / 60);
-                $base = $hours * (float) $vehicle->price_per_hour;
-                $hourlyPrice = $base;
+                $hourlyPrice = $hours * (float) $vehicle->price_per_hour;
+                $base = $hourlyPrice;
                 break;
 
             case 'flat':
@@ -64,7 +65,6 @@ class PricingService
                 ]);
         }
 
-        // Extras (future-ready, currently zero)
         $extrasTotal = 0.0;
 
         $subtotal = round($base + $distancePrice + $hourlyPrice + $extrasTotal, 2);
@@ -72,7 +72,7 @@ class PricingService
         $taxRate = (float) ($form->tax_rate ?? 0);
         $tax = round(($subtotal * $taxRate) / 100, 2);
 
-        $discount = 0.0; // placeholder (promo codes later)
+        $discount = 0.0;
 
         $total = round($subtotal + $tax - $discount, 2);
 
@@ -97,7 +97,8 @@ class PricingService
     }
 
     /**
-     * Calculate prices for all valid vehicles (used by /calculate)
+     * Calculate prices for all AVAILABLE vehicle types
+     * (inventory-aware, provider-agnostic)
      */
     public function calculateForForm(
         BookingForm $form,
@@ -108,6 +109,22 @@ class PricingService
             ->get();
 
         return $vehicles->map(function (Vehicle $vehicle) use ($form, $payload) {
+
+            // 🔒 INVENTORY CHECK (THIS IS THE KEY CHANGE)
+            $inventory = VehicleInventory::query()
+                ->where('vehicle_id', $vehicle->id)
+                ->where('active', true)
+                ->whereHas('provider', fn ($q) => $q->where('active', true))
+                ->get();
+
+            $availableQty =
+                $inventory->sum('quantity') - $inventory->sum('buffer');
+
+            // ❌ No capacity → do not show this vehicle
+            if ($availableQty <= 0) {
+                return null;
+            }
+
             try {
                 $booking = new Booking([
                     'booking_form_id' => $form->id,
@@ -126,14 +143,15 @@ class PricingService
                     'name' => $vehicle->name,
                     'passengers' => $vehicle->passengers,
                     'luggage' => $vehicle->luggage,
+                    'available_units' => $availableQty, // 🔥 important for future
                     'currency' => $pricing->currency,
                     'total' => $pricing->total,
                     'breakdown' => $pricing->breakdown,
                 ];
             } catch (\Throwable $e) {
-                // Vehicle not valid for this request
                 return null;
             }
+
         })->filter()->values();
     }
 }

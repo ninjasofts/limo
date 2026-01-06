@@ -145,7 +145,7 @@ class Booking extends Model
 
         $map = collect($schema['fields'] ?? [])
             ->filter(fn ($f) => is_array($f) && isset($f['id']))
-            ->keyBy(fn ($f) => (int) $f['id']);
+            ->keyBy(fn ($f) => (int) ($f['id']));
 
         return $this->fieldValues
             ->map(function (BookingFieldValue $fv) use ($map) {
@@ -167,7 +167,7 @@ class Booking extends Model
 
         $map = collect($schema['agreements'] ?? [])
             ->filter(fn ($a) => is_array($a) && isset($a['id']))
-            ->keyBy(fn ($a) => (int) $a['id');
+            ->keyBy(fn ($a) => (int) ($a['id']));
 
         return $this->agreementAcceptances
             ->map(function (BookingAgreementAcceptance $acc) use ($map) {

@@ -1,6 +1,7 @@
 <?php
 namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
 class Vehicle extends Model
@@ -30,12 +31,20 @@ class Vehicle extends Model
     }
 
     public function attributes()
-{
-    return $this->belongsToMany(
-        VehicleAttribute::class,
-        'vehicle_attribute_vehicle',   // 👈 explicit pivot table
-        'vehicle_id',
-        'vehicle_attribute_id'
-    )->withPivot('value');
-}
+    {
+        return $this->belongsToMany(
+            VehicleAttribute::class,
+            'vehicle_attribute_vehicle',   // 👈 explicit pivot table
+            'vehicle_id',
+            'vehicle_attribute_id'
+        )->withPivot('value');
+    }
+
+    public function inventories(): HasMany
+    {
+        return $this->hasMany(\App\Models\VehicleInventory::class);
+    }
+
+
+
 }
