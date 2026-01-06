@@ -15,7 +15,6 @@ use App\Mail\BookingConfirmed;
 use App\Mail\BookingCancelled;
 use App\Services\Invoice\InvoiceService;
 
-
 class ViewBooking extends ViewRecord
 {
     protected static string $resource = BookingResource::class;
@@ -35,65 +34,70 @@ class ViewBooking extends ViewRecord
     }
 
     protected function getHeaderActions(): array
-{
-    return [
-        Action::make('confirm')
-            ->label('Confirm')
-            ->color('success')
-            ->requiresConfirmation()
-            ->visible(fn () => $this->record->canBeConfirmed())
-            ->action(function () {
-                $this->record->update([
-                    'status' => 'processing',
-                    'payment_status' => 'pending',
-                ]);
-            $InvoicePath = app(InvoiceService::class)->generate($this->record);
-                // ✅ Customer email
-                if ($this->record->customer_email) {
-                    Mail::to($this->record->customer_email)
+    {
+        return [
+            Action::make('confirm')
+                ->label('Confirm')
+                ->color('success')
+                ->requiresConfirmation()
+                ->visible(fn () => $this->record->canBeConfirmed())
+                ->action(function () {
+                    // ✅ Confirming a booking is NOT the same as confirming payment.
+                    // payment_status must remain a valid enum value.
+                    $this->record->update([
+                        'status' => 'processing',
+                        'payment_status' => $this->record->payment_status ?: 'unpaid',
+                        // Keep method stable if present in schema
+                        'payment_method' => $this->record->payment_method ?: 'offline',
+                    ]);
+
+                    $invoicePath = app(InvoiceService::class)->generate($this->record);
+
+                    // ✅ Customer email
+                    if ($this->record->customer_email) {
+                        Mail::to($this->record->customer_email)
+                            ->queue((new BookingConfirmed($this->record))
+                                ->attach($invoicePath));
+                    }
+
+                    // ✅ Admin email
+                    Mail::to(config('mail.admin_address'))
                         ->queue((new BookingConfirmed($this->record))
-                            ->attach($InvoicePath));
-                }
+                            ->attach($invoicePath));
 
-                // ✅ Admin email
-                Mail::to(config('mail.admin_address'))
-                    ->queue((new BookingConfirmed($this->record))
-                         ->attach($InvoicePath));
+                    Notification::make()
+                        ->title('Booking confirmed')
+                        ->success()
+                        ->send();
+                }),
 
-                Notification::make()
-                    ->title('Booking confirmed')
-                    ->success()
-                    ->send();
-            }),
+            Action::make('cancel')
+                ->label('Cancel')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->visible(fn () => $this->record->canBeCancelled())
+                ->action(function () {
+                    $this->record->update([
+                        'status' => 'cancelled',
+                    ]);
 
-        Action::make('cancel')
-            ->label('Cancel')
-            ->color('danger')
-            ->requiresConfirmation()
-            ->visible(fn () => $this->record->canBeCancelled())
-            ->action(function () {
-                $this->record->update([
-                    'status' => 'cancelled',
-                ]);
+                    // ✅ Customer email
+                    if ($this->record->customer_email) {
+                        Mail::to($this->record->customer_email)
+                            ->queue(new BookingCancelled($this->record));
+                    }
 
-                // ✅ Customer email
-                if ($this->record->customer_email) {
-                    Mail::to($this->record->customer_email)
+                    // ✅ Admin email
+                    Mail::to(config('mail.admin_address'))
                         ->queue(new BookingCancelled($this->record));
-                }
 
-                // ✅ Admin email
-                Mail::to(config('mail.admin_address'))
-                    ->queue(new BookingCancelled($this->record));
-
-                Notification::make()
-                    ->title('Booking cancelled')
-                    ->danger()
-                    ->send();
-            }),
-    ];
-}
-
+                    Notification::make()
+                        ->title('Booking cancelled')
+                        ->danger()
+                        ->send();
+                }),
+        ];
+    }
 
     public function getSchema(string $name): ?Schema
     {
