@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Booking extends Model
 {
     protected $fillable = [
+        'customer_id',
         'booking_number',
         'booking_form_id',
         'booking_form_version_id',
@@ -73,6 +74,21 @@ class Booking extends Model
     public function b2bAccount()
     {
         return $this->belongsTo(B2BAccount::class);
+    }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
+
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
     }
 
     public function fieldValues()
@@ -170,22 +186,35 @@ class Booking extends Model
             ->filter(fn ($a) => is_array($a) && isset($a['id']))
             ->keyBy(fn ($a) => (int) ($a['id']));
 
-        return $this->agreementAcceptances
-            ->map(function (BookingAgreementAcceptance $acc) use ($map) {
-                $id = (int) $acc->booking_form_agreement_id;
+        // Prefer the canonical persisted records used by BookingService (booking_agreements)
+        $records = $this->relationLoaded('agreements')
+            ? $this->agreements
+            : $this->agreements()->get();
+
+        // Backward compatibility: if old table was used in any environment, fall back
+        if ($records->isEmpty()) {
+            $records = $this->relationLoaded('agreementAcceptances')
+                ? $this->agreementAcceptances
+                : $this->agreementAcceptances()->get();
+        }
+
+        return $records
+            ->map(function ($row) use ($map) {
+                $id = (int) $row->booking_form_agreement_id;
 
                 $label = $map->get($id)['label']
-                    ?? $acc->agreement?->label
+                    ?? $row->agreement?->label
                     ?? ('Agreement #' . $id);
 
                 return [
                     'agreement' => $label,
-                    'accepted'  => (bool) $acc->accepted,
+                    'accepted'  => (bool) $row->accepted,
                 ];
             })
             ->values()
             ->all();
     }
+
 
     public function agreements(): HasMany
     {

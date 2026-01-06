@@ -237,6 +237,50 @@ class BookingService
             ]);
 
             /**
+             * 8.1) Upsert customer (CRM primitive)
+             * WHY: Keep snapshot on booking, but also maintain a durable customer record for history & repeat bookings.
+             */
+            $custEmail = $payload['customer']['email'] ?? null;
+            $custPhone = $payload['customer']['phone'] ?? null;
+
+            if (!empty($custEmail) || !empty($custPhone)) {
+                $customerQuery = \App\Models\Customer::query();
+
+                if (!empty($custEmail)) {
+                    $customerQuery->where('email', $custEmail);
+                }
+
+                if (!empty($custPhone)) {
+                    $customerQuery->orWhere('phone', $custPhone);
+                }
+
+                $customer = $customerQuery->first();
+
+                if (!$customer) {
+                    $customer = \App\Models\Customer::create([
+                        'first_name' => $payload['customer']['first_name'] ?? null,
+                        'last_name'  => $payload['customer']['last_name'] ?? null,
+                        'email'      => $custEmail,
+                        'phone'      => $custPhone,
+                        'last_seen_at' => now(),
+                        'bookings_count' => 0,
+                    ]);
+                } else {
+                    $customer->fill([
+                        'first_name' => $customer->first_name ?: ($payload['customer']['first_name'] ?? null),
+                        'last_name'  => $customer->last_name  ?: ($payload['customer']['last_name'] ?? null),
+                        'email'      => $customer->email      ?: $custEmail,
+                        'phone'      => $customer->phone      ?: $custPhone,
+                        'last_seen_at' => now(),
+                    ])->save();
+                }
+
+                $customer->increment('bookings_count');
+
+                $booking->update(['customer_id' => $customer->id]);
+            }
+
+            /**
              * 9) Persist only fields/agreements belonging to this form (existing behavior kept)
              */
             $fieldIds = $form->fields->pluck('id')->map(fn ($i) => (string) $i)->all();
@@ -265,6 +309,8 @@ class BookingService
             return $booking->load(['form', 'vehicle', 'fieldValues', 'agreements', 'extras', 'pricingSnapshot']);
         });
     }
+
+    
 
     public function find(int $id): Booking
     {

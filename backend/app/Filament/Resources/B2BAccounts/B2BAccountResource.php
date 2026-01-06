@@ -47,10 +47,11 @@ class B2BAccountResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListB2BAccounts::route('/'),
-            // 'create' => CreateB2BAccount::route('/create'),
-            'view' => ViewB2BAccount::route('/{record}'),
-            // 'edit' => EditB2BAccount::route('/{record}/edit'),
+            'index'  => Pages\ListB2BAccounts::route('/'),
+            'create' => Pages\CreateB2BAccount::route('/create'),
+            'view'   => Pages\ViewB2BAccount::route('/{record}'),
+            'edit'   => Pages\EditB2BAccount::route('/{record}/edit'),
         ];
     }
+
 }
