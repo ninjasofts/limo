@@ -14,7 +14,7 @@ class EditBooking extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make(),
+           Tables\Actions\ViewAction::make(),
             DeleteAction::make(),
         ];
     }

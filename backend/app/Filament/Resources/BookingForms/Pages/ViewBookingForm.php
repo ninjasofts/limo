@@ -13,7 +13,7 @@ class ViewBookingForm extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            EditAction::make(),
+           Tables\Actions\EditAction::make(),
         ];
     }
 }

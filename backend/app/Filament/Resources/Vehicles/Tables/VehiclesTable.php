@@ -58,8 +58,8 @@ class VehiclesTable
                 //
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+               Tables\Actions\ViewAction::make(),
+               Tables\Actions\EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

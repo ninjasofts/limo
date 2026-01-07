@@ -9,7 +9,7 @@ use App\Filament\Resources\B2BAccounts\Pages\ViewB2BAccount;
 use App\Filament\Resources\B2BAccounts\Schemas\B2BAccountForm;
 use App\Filament\Resources\B2BAccounts\Schemas\B2BAccountInfolist;
 use App\Filament\Resources\B2BAccounts\Tables\B2BAccountsTable;
-use App\Models\B2BAccount;
+use App\Models\B2bAccount;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

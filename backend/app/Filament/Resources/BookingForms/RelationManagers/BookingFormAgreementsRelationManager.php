@@ -49,7 +49,7 @@ class BookingFormAgreementsRelationManager extends RelationManager
                 CreateAction::make(),
             ])
             ->actions([
-                EditAction::make(),
+               Tables\Actions\EditAction::make(),
                 DeleteAction::make(),
             ]);
     }
