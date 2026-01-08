@@ -92,6 +92,9 @@ class BookingsTable
                     ->searchable(),
                 TextColumn::make('customer_phone')
                     ->searchable(),
+                TextColumn::make('provider_payout_total')->numeric()->sortable(),
+                TextColumn::make('margin_amount')->numeric()->sortable(),
+                TextColumn::make('margin_percent')->suffix('%')->numeric()->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -50,6 +50,9 @@ class Booking extends Model
         'tax' => 'decimal:2',
         'discount' => 'decimal:2',
         'total' => 'decimal:2',
+        'provider_payout_total' => 'decimal:2',
+        'margin_amount' => 'decimal:2',
+        'margin_percent' => 'decimal:2',
     ];
 
     // =========================
@@ -275,5 +278,10 @@ class Booking extends Model
     public function markPaymentFailed(): void
     {
         $this->update(['payment_status' => 'failed']);
+    }
+
+    public function providerPayouts()
+    {
+        return $this->hasMany(ProviderPayout::class);
     }
 }
