@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 class InvoicePrimitiveService
 {
-    public function createFromBooking(Booking $booking, ?int $b2bAccountId = null): Invoice
+    public function createFromBooking(Booking $booking, ?int $B2bAccountId = null): Invoice
     {
-        return DB::transaction(function () use ($booking, $b2bAccountId) {
+        return DB::transaction(function () use ($booking, $B2bAccountId) {
 
             $invoice = Invoice::create([
                 'booking_id' => $booking->id,
-                'b2b_account_id' => $b2bAccountId ?? $booking->b2b_account_id,
+                'b2b_account_id' => $B2bAccountId ?? $booking->b2b_account_id,
                 'invoice_number' => InvoiceNumber::make(),
                 'status' => 'issued',
                 'currency' => $booking->currency,

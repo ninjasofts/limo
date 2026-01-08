@@ -71,9 +71,9 @@ class Booking extends Model
         return $this->belongsTo(Vehicle::class);
     }
 
-    public function b2bAccount()
+    public function B2bAccount()
     {
-        return $this->belongsTo(B2BAccount::class);
+        return $this->belongsTo(B2bAccount::class);
     }
 
     public function customer()

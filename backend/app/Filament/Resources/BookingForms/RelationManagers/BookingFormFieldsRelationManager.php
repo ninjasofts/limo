@@ -10,8 +10,8 @@ use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
@@ -94,7 +94,7 @@ class BookingFormFieldsRelationManager extends RelationManager
                 CreateAction::make(),
             ])
             ->actions([
-               Tables\Actions\EditAction::make(),
+              EditAction::make(),
                 DeleteAction::make(),
             ]);
     }

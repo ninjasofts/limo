@@ -1,20 +1,20 @@
 <?php
 
-namespace App\Filament\Resources\B2BAccounts\Pages;
+namespace App\Filament\Resources\B2bAccounts\Pages;
 
-use App\Filament\Resources\B2BAccounts\B2BAccountResource;
+use App\Filament\Resources\B2bAccounts\B2bAccountResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
-class EditB2BAccount extends EditRecord
+class EditB2bAccount extends EditRecord
 {
-    protected static string $resource = B2BAccountResource::class;
+    protected static string $resource = B2bAccountResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-           Tables\Actions\ViewAction::make(),
+          ViewAction::make(),
             DeleteAction::make(),
         ];
     }

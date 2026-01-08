@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Filament\Resources\B2BAccounts\Schemas;
+namespace App\Filament\Resources\B2bAccounts\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
-class B2BAccountInfolist
+class B2bAccountInfolist
 {
     public static function configure(Schema $schema): Schema
     {

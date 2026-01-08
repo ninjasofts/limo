@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Filament\Resources\B2BAccounts\Schemas;
+namespace App\Filament\Resources\B2bAccounts\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
-class B2BAccountForm
+class B2bAccountForm
 {
     public static function configure(Schema $schema): Schema
     {

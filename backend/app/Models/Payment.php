@@ -30,7 +30,7 @@ class Payment extends Model
         return $this->belongsTo(Invoice::class);
     }
 
-    public function b2bAccount()
+    public function B2bAccount()
     {
         return $this->belongsTo(B2bAccount::class);
     }

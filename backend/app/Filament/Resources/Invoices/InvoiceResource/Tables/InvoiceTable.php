@@ -39,7 +39,7 @@ class InvoiceTable
                     ->since(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+               ViewAction::make(),
             ])
             ->defaultSort('created_at', 'desc');
     }

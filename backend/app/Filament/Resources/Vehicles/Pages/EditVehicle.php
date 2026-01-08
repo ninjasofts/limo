@@ -14,7 +14,7 @@ class EditVehicle extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-           Tables\Actions\ViewAction::make(),
+          ViewAction::make(),
             DeleteAction::make(),
         ];
     }

@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Filament\Resources\B2BAccounts\Pages;
+namespace App\Filament\Resources\B2bAccounts\Pages;
 
-use App\Filament\Resources\B2BAccounts\B2BAccountResource;
+use App\Filament\Resources\B2bAccounts\B2bAccountResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
-class ViewB2BAccount extends ViewRecord
+class ViewB2bAccount extends ViewRecord
 {
-    protected static string $resource = B2BAccountResource::class;
+    protected static string $resource = B2bAccountResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
-           Tables\Actions\EditAction::make(),
+          EditAction::make(),
         ];
     }
 }

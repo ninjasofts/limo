@@ -27,7 +27,7 @@ class Invoice extends Model
         return $this->belongsTo(Booking::class);
     }
 
-    public function b2bAccount()
+    public function B2bAccount()
     {
         return $this->belongsTo(B2bAccount::class);
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\B2BAccounts\Tables;
+namespace App\Filament\Resources\B2bAccounts\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -9,7 +9,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class B2BAccountsTable
+class B2bAccountsTable
 {
     public static function configure(Table $table): Table
     {
@@ -45,8 +45,8 @@ class B2BAccountsTable
                 //
             ])
             ->recordActions([
-               Tables\Actions\ViewAction::make(),
-               Tables\Actions\EditAction::make(),
+              ViewAction::make(),
+              EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

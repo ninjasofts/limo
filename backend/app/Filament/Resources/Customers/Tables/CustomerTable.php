@@ -33,8 +33,8 @@ class CustomerTable
                     ->label('Last Seen'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+               ViewAction::make(),
+               EditAction::make(),
             ])
             ->defaultSort('created_at', 'desc');
     }
