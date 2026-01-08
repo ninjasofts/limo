@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Payments\PaymentResource\Tables;
 
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 
 class PaymentTable
 {
